@@ -18,6 +18,7 @@ class Gesture {
         this.handlers = {
             tap: [],
             doubleTap: [],
+            longTap: [],
             swipe: [],
             touchstart: [],
             touchend: [],
@@ -34,6 +35,7 @@ class Gesture {
         this.preTapPosition = {}
         this.isDoubleTap = null
         this.tapTimeout = null
+        this.longTapTimeout = null
     }
 
     bind() {
@@ -55,11 +57,17 @@ class Gesture {
                 this.dispatch('doubleTap', evt)
                 this.isDoubleTap = false
             }
+            if (this.longTapTimeout && Date.now() - this.last < 800) {
+                clearTimeout(this.longTapTimeout)
+            }
         })
         this.node.ontouchmove = (evt) => {
             this.dispatch('touchmove', evt)
             this.x2 = evt.touches[0].pageX
             this.y2 = evt.touches[0].pageY
+            if (this.longTapTimeout) {
+                clearTimeout(this.longTapTimeout)
+            }
         }
         this.node.addEventListener('touchstart', evt => {
             this.dispatch('touchstart', evt)
@@ -76,19 +84,25 @@ class Gesture {
             this.preTapPosition.x = this.x1
             this.preTapPosition.y = this.y1
             this.last = this.now
+            let _that = this
+            this.longTapTimeout = setTimeout(function (evt) {
+                _that.dispatch('longTap', evt)
+            }, 800, evt)
         })
     }
 
     _swipeDirection(x1, x2, y1, y2) {
         let x = x1 - x2 > 0 ? 'left' : 'right'
         let y = y1 - y2 > 0 ? 'bottom' : 'top'
+        let path = `(${x1},${y1})->(${x2},${y2})`
         return {
             hDirection: x,
-            vDirection: y
+            vDirection: y,
+            path: path
         }
     }
 
-    dispatch(eventType,evt) {
+    dispatch(eventType, evt) {
         this.handlers[eventType].forEach(handler => handler.call(this.node, evt))
     }
 
@@ -98,17 +112,21 @@ class Gesture {
 }
 
 // eg
-// let touchNode = document.querySelector('.touch')
-// const gesture = new Gesture(touchNode)
-// gesture.on('tap', () => {
-//     console.log('tap')
-// })
+let touchNode = document.querySelector('.touch')
+const gesture = new Gesture(touchNode)
+gesture.on('tap', () => {
+    console.log('tap')
+})
 
-// gesture.on('doubleTap', () => {
-//     console.log('doubleTap')
-// })
+gesture.on('doubleTap', () => {
+    console.log('doubleTap')
+})
 
-// gesture.on('swipe', (evt) => {
-//     console.log('swipe')
-//     console.log(evt.direction)
-// })
+gesture.on('swipe', (evt) => {
+    console.log('swipe')
+    console.log(evt.direction)
+})
+
+gesture.on('longTap', (evt) => {
+    console.log('longTap')
+})

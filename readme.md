@@ -37,3 +37,14 @@ gesture.on('swipe', (evt) => {
         vDirection:'bottom'|'top'
     }
     ```
+
+## 待开发手势
+
++ [x] longTap
++ [] pinch/zoom
++ [] rotate
++ [] move/drag
+
+## 已知未解决bug
+
++ [] 长按选中某个字符串序列后，tap改选中序列会触发swipe事件和longTap事件，而不是tap事件，暂未解决该问题
